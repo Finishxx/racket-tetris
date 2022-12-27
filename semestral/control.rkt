@@ -4,14 +4,16 @@
          "const+aux.rkt"
          lang/posn
          "tock.rkt"
-         (only-in "draw.rkt" ghost-block-pos))
+         (only-in "draw.rkt" ghost-block-pos)
+         compatibility/defmacro)
 (provide (all-defined-out))
 
 ;; Tet Ke -> Tet
 ;; moves the tetrimono left or right if there is nothing blocking it's path
 ;; 1. "left" - moves the tetrimono one left on the grid, does not move if it is at the left border or there is another tetrimono one to the left
 ;; 2. "right" - moves the tetrimono one right on the grid, does not move if it is a the right border or there is another tetrimono one to the right
-;; 3. "down" - moves the block to the lowest viable position on the same x
+;; 3. "down" - moves the tetrimono to the lowest viable position
+;; 4. "up" - rotates the tetrimono
 (define (control tet ke)
   (cond
     [(and
@@ -24,34 +26,32 @@
      (make-tet (move-right (tet-hand tet)) (tet-blocks tet) (tet-bag tet) (tet-score tet))]
     [(string=? ke "down")
      (move-down (tet-hand tet) (tet-blocks tet) (tet-bag tet) (tet-score tet))]
-    [(and
-      (string=? ke "up")
-      (rotate? (tet-hand tet) (tet-blocks tet)))
-     (make-tet (rotate-me (tet-hand tet))
-               (tet-blocks tet) (tet-bag tet) (tet-score tet))]
-    [(and (string=? ke "up")
-          (rotate? (block-placement (tet-hand tet) (make-posn 1 0)) (tet-blocks tet)))
-     (make-tet (rotate-me (block-placement (tet-hand tet) (make-posn 1 0)))
-               (tet-blocks tet) (tet-bag tet) (tet-score tet))]
-    [(and (string=? ke "up")
-          (rotate? (block-placement (tet-hand tet) (make-posn 2 0)) (tet-blocks tet)))
-     (make-tet (rotate-me (block-placement (tet-hand tet) (make-posn 2 0)))
-               (tet-blocks tet) (tet-bag tet) (tet-score tet))]
-    [(and (string=? ke "up")
-          (rotate? (block-placement (tet-hand tet) (make-posn -1 0)) (tet-blocks tet)))
-     (make-tet (rotate-me (block-placement (tet-hand tet) (make-posn -1 0)))
-               (tet-blocks tet) (tet-bag tet) (tet-score tet))]
-    [(and (string=? ke "up")
-          (rotate? (block-placement (tet-hand tet) (make-posn 0 1)) (tet-blocks tet)))
-     (make-tet (rotate-me (block-placement (tet-hand tet) (make-posn 0 1)))
-               (tet-blocks tet) (tet-bag tet) (tet-score tet))]
-    [(and (string=? ke "up")
-          (rotate? (block-placement (tet-hand tet) (make-posn 0 2)) (tet-blocks tet)))
-     (make-tet (rotate-me (block-placement (tet-hand tet) (make-posn 0 2)))
-               (tet-blocks tet) (tet-bag tet) (tet-score tet))]               
+    [(string=? ke "up")
+     (rotate-event tet)]
     [(string=? ke "\r")
      (quick-fall (tet-hand tet) (tet-blocks tet) (tet-bag tet) (tet-score tet))]
     [else tet]))
+
+(define-syntax rotate-case
+  (syntax-rules ()
+    [(rotate-case x y) 
+     `[(rotate? (block-placement (tet-hand tet) (make-posn x y)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn x y)))]]))
+
+;; Tet -> Tet
+;; rotates the tetrimono
+;; either in-place, or it is "kicked" left
+(define (rotate-event tet)
+  (make-tet
+   (cond
+     [(rotate? (tet-hand tet) (tet-blocks tet))
+      (rotate-me (tet-hand tet))]
+     [(rotate-case 2 0)]
+     [(rotate-case -1 0)]
+     [(rotate-case 0 1)]
+     [(rotate-case 0 2)]
+     [else tet])
+   (tet-blocks tet) (tet-bag tet) (tet-score tet)))
 
 ;; Posn(tet-hand) ListOf(Posn)(tet-blocks) -> Bool
 ;; returns false, if any of the tet-blocks are tet-hand(x-1,y)or if they are on the border
