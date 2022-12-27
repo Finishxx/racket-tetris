@@ -20,9 +20,9 @@
 ;; Tet is a Structure
 ;; (make-tet (ListOfBlock, ListOfBlock, ListOfListOfBlock, Num)
 ;; Implementation:
-;; tet-hand describes where the current falling controllable tetrimino is located and its color
-;; tet-blocks describes where the other already fallen blocks are + their color
-;; tet-bag describes what the next tetriminos are
+;; tet-hand holds the current falling tetrimino
+;; tet-blocks holds already fallen blocks
+;; tet-bag holds upcoming tetriminos
 ;; tet-score describes the current score of the player
 
 (define-struct score [score level lines-cleared]
@@ -34,8 +34,7 @@
 ;; score-level describest the current level
 ;; score-lines-cleared describes the number of lines-cleared
 
-;;================ Quality of life aux. functions: ================
-;; debatable, if tests are valid here, still should fit in somehow ̄\_(ツ)_/̄
+;; ================ Scene-drawing: ================
 
 ;; Num -> Num
 ;; halves the given number
@@ -47,7 +46,8 @@
   (make-pen "gray" 1 "solid" "round" "round"))
 
 ;; Num Image -> Image
-;; An auxiliary function for drawing x portion of the grid
+;; Draws X-LINES rows onto grid
+
 (define (aux-grid-x num img)
   (cond
     [(= num X-LINES) img]
@@ -63,7 +63,7 @@
              ))]))
 
 ;; Num Image -> Image
-;; An auxiliary function for drawing y portion of the grid
+;; Draws Y-LINES collumns onto grid
 (define (aux-grid-y num img)
   (cond
     [(= num Y-LINES) img]
@@ -88,40 +88,31 @@
 (define (aux-y-position num)
   (* num CUBE-LENGTH))
 
-;; ================ Mathematical constants (mostly): ================
+;; ================ Mathematical constants: ================
 (define CUBE-LENGTH 20)
+;; how many blocks stacked vertically/horizontally fit into canvas
 (define SCENE-WIDTH-INDEX 20)
 (define SCENE-HEIGHT-INDEX 30)
+
 (define SCENE-WIDTH (* SCENE-WIDTH-INDEX CUBE-LENGTH))
 (define SCENE-HEIGHT (* SCENE-HEIGHT-INDEX CUBE-LENGTH))
 (define HALF-SCENE-WIDTH (half SCENE-WIDTH))
-(define HALF-SCENE-HEIGHT (half SCENE-HEIGHT)) 
-(define MTSC (empty-scene SCENE-WIDTH SCENE-HEIGHT))
-(define SHIVER 0.4)
+(define HALF-SCENE-HEIGHT (half SCENE-HEIGHT))
 
+(define MTSC (empty-scene SCENE-WIDTH SCENE-HEIGHT))
+(define SHIVER 0.4) ;; describes what percent of block should be seen in the highest row (21st)
+;; describes position of the left-bottom corner of playing grid 
 (define X-OFFSET (* 4.5 CUBE-LENGTH)) ;; breaks when SCENE-WIDTH//HEIGHT-INDEX is changed, careful!!! 
 (define Y-OFFSET (* 25.7 CUBE-LENGTH)) ;; breaks when SCENE-WIDTH//HEIGHT-INDEX is changed, careful!!! 
-(define MID-HEIGTH (- Y-OFFSET (- SCENE-HEIGHT Y-OFFSET) CUBE-LENGTH))
 
 ;; these are just for drawing purposes and they mean how many || are there to each axis in a grid
 (define X-LINES 20)
 (define Y-LINES 10)
 
+;; ================ Graphical constants: ================
 
-
-(define WHITE-SPACE-Y-POS (half (* 5.5 CUBE-LENGTH)))
-
-;; ================ Graphical constants (mostly): ================
-
-(define (draw-block col)
-  (square CUBE-LENGTH "solid" col))
 (define BORDER (rectangle (* Y-LINES CUBE-LENGTH) (* (+ X-LINES SHIVER) CUBE-LENGTH) "outline" "black"))
-(define GRID-X
-  (aux-grid-x 0 BORDER))
-(define GRID-Y
-  (aux-grid-y 0 BORDER))
 (define GRID (aux-grid-x 0 (aux-grid-y 1 BORDER)))
-
 
 (define TOP-SPACE (rectangle SCENE-WIDTH (half (- SCENE-HEIGHT (image-height GRID))) "solid" "blue"))
 (define TETRIS-SPACE (overlay
@@ -162,8 +153,6 @@
                              HALF-SCENE-WIDTH
                              (* 27.5 CUBE-LENGTH)
                              PLACED-MTSC))
-
-(define FINAL-LAYOUT (place-image GRID HALF-SCENE-WIDTH HALF-SCENE-HEIGHT PLACED-MTSC))
 
 ;; Blocks, Posn -> Blocks
 ;; moves a tetrimino by posn-x and posn-y
