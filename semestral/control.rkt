@@ -32,24 +32,22 @@
      (quick-fall (tet-hand tet) (tet-blocks tet) (tet-bag tet) (tet-score tet))]
     [else tet]))
 
-(define-syntax rotate-case
-  (syntax-rules ()
-    [(rotate-case x y) 
-     `[(rotate? (block-placement (tet-hand tet) (make-posn x y)) (tet-blocks tet))
-      (rotate-me (block-placement (tet-hand tet) (make-posn x y)))]]))
-
 ;; Tet -> Tet
 ;; rotates the tetrimono
-;; either in-place, or it is "kicked" left
+;; either in-place, or it is "kicked" left/right/up
 (define (rotate-event tet)
   (make-tet
    (cond
      [(rotate? (tet-hand tet) (tet-blocks tet))
       (rotate-me (tet-hand tet))]
-     [(rotate-case 2 0)]
-     [(rotate-case -1 0)]
-     [(rotate-case 0 1)]
-     [(rotate-case 0 2)]
+     [(rotate? (block-placement (tet-hand tet) (make-posn 2 0)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn 2 0)))]
+     [(rotate? (block-placement (tet-hand tet) (make-posn -1 0)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn -1 0)))]
+     [(rotate? (block-placement (tet-hand tet) (make-posn 0 1)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn 0 1)))]
+     [(rotate? (block-placement (tet-hand tet) (make-posn 0 2)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn 0 2)))]
      [else tet])
    (tet-blocks tet) (tet-bag tet) (tet-score tet)))
 
