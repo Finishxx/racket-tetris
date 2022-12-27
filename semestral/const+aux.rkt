@@ -43,7 +43,7 @@
 
 ;; used for painting grid
 (define PEN
-  (make-pen "gray" 1 "solid" "round" "round"))
+  (make-pen "dark gray" 1 "solid" "round" "round"))
 
 ;; Num Image -> Image
 ;; Draws X-LINES rows onto grid

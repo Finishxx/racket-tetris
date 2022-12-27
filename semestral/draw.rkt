@@ -5,16 +5,7 @@
          "tock.rkt")
 (provide (all-defined-out))
 
-
-
-
-
-;; draw:
-;; 1. draw-blocks ✓
-;; 2. schematic->actual ✓
-;; 3. block-list ✓
-;; 4. actual->schematic
-
+;; order first->last: preview, ghost-blocks, blocks, LAYOUT, score, level
 (define (draw tet)
   (draw-level
    (score-level (tet-score tet))
@@ -26,8 +17,7 @@
      (list (make-posn HALF-SCENE-WIDTH
                       (half (image-height TETRIS-SPACE-FINAL)))
            (make-posn HALF-SCENE-WIDTH
-                      HALF-SCENE-HEIGHT)
-           )
+                      HALF-SCENE-HEIGHT))
      (draw-blocks (append (tet-hand tet)
                           (tet-blocks tet))
                   (ghost-block-draw (tet-hand tet)
@@ -35,7 +25,7 @@
                                     (block-preview (tet-bag tet) PLACED-MTSC-PREVIEW)))))))
 
 ;; blocks bckg -> Image
-;; places blocks in accordance with schematic pos given onto bckg
+;; draws blocks onto bckg
 (define (draw-blocks blocks bckg)
   (place-images
    (block-list (list-col blocks))
@@ -43,7 +33,7 @@
    bckg))
 
 ;; ListOfBlocks -> ListOfPosn
-;; provided a list of blocks returns a list of posns
+;; maps each block into it's posn
 (define (blocks->posn blocks)
   (map (lambda (block)
          (block-posn block))
@@ -57,25 +47,37 @@
                     (inexact->exact (- Y-OFFSET (* (posn-y posit) CUBE-LENGTH))))) pos))
 
 ;; ListOfBlocks -> ListOfColor
-;; given a list of blocks returns a list of colors in order
+;; maps each block into it's color
 (define (list-col blocks)
   (map (lambda (block)
          (block-col block))
        blocks))
 
-;; ListOfCol -> ListOf(Blocks = Images)
+;; ListOfCol -> ListOfImages
 ;; Creates a list of blocks from given list of colors in order
 (define (block-list col)
   (map (lambda (col)
          (square CUBE-LENGTH "solid" col))
        col))
 
+;; ListOfBlocks, Image -> Image
+;; draws given blocks into image with border. First draws blocks, then add borders
+(define (draw-blocks-preview blocks bckg)
+  (let ([block-positions (schematic->actual (blocks->posn blocks))])
+    (place-images
+     (map (lambda (dummy)
+            (square CUBE-LENGTH "outline" "black"))
+          blocks)
+     block-positions
+     (place-images
+      (block-list (list-col blocks))
+      block-positions
+      bckg))))
+
 ;; Bag -> Img
 ;; renders block preview
 (define (block-preview bag img)
-  (draw-blocks (preview-pos (take bag 3)) img))
-
-
+  (draw-blocks-preview (preview-pos (take bag 3)) img))
 
 ;; ListOfBlocks -> ListOfBlocks
 ;; moves the tetriminos to preview positions
@@ -86,6 +88,7 @@
 
 ;; ListOfBlocks -> ListOfBlocks
 ;; sets the y pos of a set of blocks to preview compatible level
+;; uses schematic values of the blocks in tetriminos.rkt
 (define (preview-y-pos blocks)
   (map (lambda (block)
          (make-block (make-posn (posn-x (block-posn block))
