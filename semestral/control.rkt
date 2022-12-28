@@ -127,7 +127,6 @@
          (is-at-y? (rotate-me hand) 0)) #f]
     [else #t]))
 
-
 ;; Hand -> Bool
 ;; checks if a block is I
 (define (is-I? hand)
@@ -208,8 +207,6 @@
                                                    (posn-y (block-posn (third hand))))))
                                          (block-col (first hand))))
                           (make-posn -1 0))]))
-
-  
 
 ;; Hand -> Hand
 ;; rotates a tetrimino. the tetriminos are defined in a way

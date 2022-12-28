@@ -54,9 +54,3 @@
 
 (define DEFAULT-BAG (list I J L O S Z T))
 
-;; Hand Pos -> Hand
-;; places the first block of a shape on pos and calculates the rest
-(define (test-place block pos)
-  #t)
-
-

@@ -5,9 +5,6 @@
          lang/posn)
 (provide (all-defined-out))
 
-;; end-game:
-;; 1. top-off? ✓
-
 ;; Tet -> Bool
 ;; ends the game, if blocks reach y = 21 or 21 <= y
 ;; 1. Ends game => y => 21 #t
@@ -31,7 +28,6 @@
 ;; returns true, if y is >= 21
 (define (posn>=21? pos)
   (>= (posn-y (block-posn pos)) 21))
-
 
 ;; Tet -> Img
 ;; returns the last state of the world

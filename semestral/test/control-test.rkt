@@ -268,9 +268,6 @@
       (test-equal? "O"
                    (is-O? O)
                    #t)
-      (test-equal? "rotated O"
-                   (is-O? (rotate! O (make-block (make-posn 5.5 21.5) "yellow")))
-                   #t)
       (test-equal? "rotated rotated O(-2, -13)"
                   (is-O? (rotate!
                           (rotate! (block-placement O (make-posn -2 -13))
@@ -286,20 +283,6 @@
       (test-equal? "L"
                    (is-O? L)
                    #f))
-     (test-suite
-      "rotate-O!"
-      (test-equal? "O"
-                   (rotate-O! O)
-                   (list (make-block (make-posn 6 22) "yellow")
-                         (make-block (make-posn 6 21) "yellow")
-                         (make-block (make-posn 5 22) "yellow")
-                         (make-block (make-posn 5 21) "yellow")))
-      (test-equal? "rotated O"
-                   (rotate-O! (rotate-O! O))
-                   (list (make-block (make-posn 6 21) "yellow")
-                         (make-block (make-posn 5 21) "yellow")
-                         (make-block (make-posn 6 22) "yellow")
-                         (make-block (make-posn 5 22) "yellow"))))
      (test-suite
       "pos-eq?"
       (test-equal? "5 5; 6 5"
