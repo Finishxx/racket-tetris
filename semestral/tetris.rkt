@@ -16,23 +16,26 @@
 
 (define (tet-main clock)
   (big-bang clock
-    [on-key control-pause]
-    [on-tick tock-pause CLOCK-SPEED] ;; clock ticks every CLOCK-SPEED seconds
-    [to-draw draw-pause]
-    [stop-when end-game-pause? last-frame-pause]))
+    [on-key control-music]
+    [on-tick tock-music CLOCK-SPEED] ;; clock ticks every CLOCK-SPEED seconds
+    [to-draw draw-music]
+    [stop-when end-game-music? last-frame-music]))
 
 (define SHUFFLED-BAG (shuffle DEFAULT-BAG))
 
 (define NORMAL-START
   (tet-main
-   (make-clock
+   (make-music
     0
-    (make-tet
-     (first SHUFFLED-BAG)
-     (list)
-     (rest SHUFFLED-BAG)
-     (make-score 0 1 0))
-    #f)))
+    MUSIC-LENGTH
+    (make-clock
+     0
+     (make-tet
+      (first SHUFFLED-BAG)
+      (list)
+      (rest SHUFFLED-BAG)
+      (make-score 0 1 0))
+     #f))))
 #|
 (define LOW-START
   (tet-main

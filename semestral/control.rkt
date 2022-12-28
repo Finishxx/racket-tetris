@@ -7,13 +7,22 @@
          (only-in "draw.rkt" ghost-block-pos))
 (provide (all-defined-out))
 
+
+;; simple wrapper for music
+(define (control-music music ke)
+  (make-music (music-begin music)
+              (music-end music)
+              (control-pause (music-clock music) ke)))
+
 ;; Clock Ke -> Clock
 ;; Take care of resolving pause and also resets clock-tick
 ;; if tetrimino moved down because of player action
 (define (control-pause clock ke)
   (cond
     [(string=? ke "p")
-     (make-clock (clock-tick clock) (clock-tet clock) (not (clock-pause clock)))]
+     (make-clock (clock-tick clock)
+                 (clock-tet clock)
+                 (not (clock-pause clock)))]
     [(clock-pause clock) clock] ;; = true
     [else (make-clock (cond
                         [(or (string=? ke "down") (string=? ke "\r")) 0]

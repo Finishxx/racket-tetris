@@ -35,6 +35,15 @@
 ;; clock-tet holds the current state of the game
 ;; clock-pause is true when the game is pause and false when the game is on
 
+(define-struct music [begin end clock]
+  #:transparent)
+;; Music is a Structure
+;; (make-music Num Num Clock)
+;; Implementation:
+;; music-begin is the frame on which the last music started playing
+;; music-end is the frame on which the music ends and should be restarted
+;; music-clock holds the current state of the game together with clock
+
 (define-struct score [score level lines-cleared]
   #:transparent)
 ;; Score is a Structure
@@ -119,6 +128,8 @@
 ;; these are just for drawing purposes and they mean how many || are there to each axis in a grid
 (define X-LINES 20)
 (define Y-LINES 10)
+
+
 
 ;; ================ Graphical constants: ================
 
