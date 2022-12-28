@@ -4,9 +4,23 @@
          "const+aux.rkt"
          lang/posn
          "tock.rkt"
-         (only-in "draw.rkt" ghost-block-pos)
-         compatibility/defmacro)
+         (only-in "draw.rkt" ghost-block-pos))
 (provide (all-defined-out))
+
+;; Clock Ke -> Clock
+;; Take care of resolving pause and also resets clock-tick
+;; if tetrimino moved down because of player action
+(define (control-pause clock ke)
+  (cond
+    [(string=? ke "p")
+     (make-clock (clock-tick clock) (clock-tet clock) (not (clock-pause clock)))]
+    [(clock-pause clock) clock] ;; = true
+    [else (make-clock (cond
+                        [(or (string=? ke "down") (string=? ke "\r")) 0]
+                        [else (clock-tick clock)])
+                      (control (clock-tet clock) ke)
+                      (clock-pause clock))]))
+                   
 
 ;; Tet Ke -> Tet
 ;; moves the tetrimono left or right if there is nothing blocking it's path

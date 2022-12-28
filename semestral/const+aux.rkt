@@ -8,7 +8,7 @@
 (define-struct block [posn col]
   #:transparent)
 ;; Block is a Structure
-;; (make-block (Posn, String)
+;; (make-block Posn, String)
 ;; Implementation:
 ;; Posn describes the position of a block
 ;; Col describes the color of the block
@@ -18,17 +18,27 @@
 (define-struct tet [hand blocks bag score]
   #:transparent)
 ;; Tet is a Structure
-;; (make-tet (ListOfBlock, ListOfBlock, ListOfListOfBlock, Num)
+;; (make-tet ListOfBlock, ListOfBlock, ListOfListOfBlock, Num)
 ;; Implementation:
 ;; tet-hand holds the current falling tetrimino
 ;; tet-blocks holds already fallen blocks
 ;; tet-bag holds upcoming tetriminos
 ;; tet-score describes the current score of the player
 
+(define-struct clock [tick tet pause]
+  #:transparent)
+;; Clock is a Structure
+;; (make-clock Num Tet Bool)
+;; Implementation:
+;; clock-tick holds the current tick. When tick is over certain
+;;   amount, it becomes zero and tock is called
+;; clock-tet holds the current state of the game
+;; clock-pause is true when the game is pause and false when the game is on
+
 (define-struct score [score level lines-cleared]
   #:transparent)
 ;; Score is a Structure
-;; (make-score (Num Num Num)
+;; (make-score Num Num Num)
 ;; Implementation:
 ;; score-score describes the current score
 ;; score-level describest the current level
@@ -138,7 +148,7 @@
 
 
 ;;================ Pictures: ================
-;; Basic layout:
+(define PAUSE (text "PAUSE" (* 2 CUBE-LENGTH)  "black"))
 
 (define ADV-MTSC (above (beside (rectangle (* 5 CUBE-LENGTH) (image-height GRID) "solid" "light blue")
                                 (rectangle (* 10 CUBE-LENGTH) (image-height GRID) "solid" "white")

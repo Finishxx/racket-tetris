@@ -13,18 +13,22 @@
 ;; it is preferable if a sliver of 21st row is visible
 ;; (https://tetris.wiki/Super_Rotation_System)
 
-(define (tet-main tet)
-  (big-bang tet
-    [on-key control]
-    [on-tick tock (tick-control (score-level (tet-score tet)))]
-    [to-draw draw]
-    [stop-when end-game? last-frame]))
+(define (tet-main clock)
+  (big-bang clock
+    [on-key control-pause]
+    [on-tick tock-pause (tick-control (score-level (tet-score (clock-tet clock))))]
+    [to-draw draw-pause]
+    [stop-when end-game-pause? last-frame-pause]))
 
 (define SHUFFLED-BAG (shuffle DEFAULT-BAG))
 
 (define NORMAL-START
-  (tet-main (make-tet
-             (first SHUFFLED-BAG)
-             (list)
-             (rest SHUFFLED-BAG)
-             (make-score 0 1 0))))
+  (tet-main
+   (make-clock
+    0
+    (make-tet
+     (first SHUFFLED-BAG)
+     (list)
+     (rest SHUFFLED-BAG)
+     (make-score 0 1 0))
+    #f)))

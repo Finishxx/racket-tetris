@@ -5,6 +5,14 @@
          lang/posn)
 (provide (all-defined-out))
 
+
+;; Simple wrappers
+(define (end-game-pause? clock)
+  (end-game? (clock-tet clock)))
+
+(define (last-frame-pause clock)
+  (last-frame (clock-tet clock)))
+
 ;; Tet -> Bool
 ;; ends the game, if blocks reach y = 21 or 21 <= y
 ;; 1. Ends game => y => 21 #t

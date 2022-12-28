@@ -5,6 +5,12 @@
          "tock.rkt")
 (provide (all-defined-out))
 
+(define (draw-pause clock)
+  (cond
+    [(clock-pause clock) ;; = true
+     (place-image PAUSE HALF-SCENE-WIDTH HALF-SCENE-HEIGHT (draw (clock-tet clock)))]
+    [(draw (clock-tet clock))]))
+
 ;; order first->last: preview, ghost-blocks, blocks, LAYOUT, score, level
 (define (draw tet)
   (draw-level

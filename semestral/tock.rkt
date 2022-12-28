@@ -7,6 +7,15 @@
          )
 (provide (all-defined-out))
 
+;; Clock -> Clock
+;; if pause, we skip, else we do TODO: clock-thing
+(define (tock-pause clock)
+  (cond
+    [(clock-pause clock) clock] ;; = true
+    [else (make-clock (+ (clock-tick clock) 1) ;; TODO: make it based on level
+                        (tock (clock-tet clock))
+                        (clock-pause clock))]))
+
 ;; Tet -> Tet
 ;; If tetrimino can't fall, we call block-row, else we let it fall by one
 (define (tock tet)
