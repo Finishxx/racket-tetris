@@ -47,23 +47,25 @@
 ;; ListOfBlocks Block -> Bool
 ;; compares the posn of tetrimino and a block
 ;; to return #t if they are equal or #f if they are not
-(define (posn-equal? hand block)
+(define (posn-equal? hand blocks)
   (ormap (lambda (block)
-           (and (= (posn-x (block-posn block)) (posn-x (block-posn block)))
-                (= (posn-y (block-posn block)) (posn-y (block-posn block)))))
+           (and (= (posn-x (block-posn block)) (posn-x (block-posn blocks)))
+                (= (posn-y (block-posn block)) (posn-y (block-posn blocks)))))
          hand))
 
 ;; Hand Blocks Bag Score -> Tet
 ;; spawns a new block, depending on if any rows are full, cleares them,
 ;; updates bag and score
 (define (block-row hand blocks bag score)
+  (let ([new-blocks
+        (cond
+          [(clear-row? (append hand blocks) 0)
+           (clear-row! (append hand blocks) (which-row (append hand blocks) 1))]
+          [else (block! hand blocks)])])
   (make-tet (spawn-block bag)
-            (cond
-              [(clear-row? (append hand blocks) 0)
-               (clear-row! (append hand blocks) (which-row (append hand blocks) 1))]
-              [else (block! hand blocks)])
+            new-blocks
             (update-bag bag)
-            (update-score (append hand blocks) score)))
+            (update-score (append hand blocks) new-blocks score))))
 
 ;; Bag -> ListOfBlocks
 ;; spawns a new tetrimino, the first in the bag
@@ -82,11 +84,11 @@
 ;; ListOfBlocks Num -> ListOfBlocks
 ;; clears a target row and repeats calling itself with new state
 (define (clear-row! blocks target)
-  (let ([new-blocks (dirty-work blocks target)])
-    (cond
-      [(number? target)
-       (clear-row! new-blocks (which-row new-blocks 1))]
-      [else blocks])))
+  (cond
+    [(number? target)
+     (let ([new-blocks (dirty-work blocks target)])
+       (clear-row! new-blocks (which-row new-blocks 1)))]
+    [else blocks]))
 
 ;; ListOfBlocks Num -> ListOfBlocks
 ;; kills a target row and moves the blocks above it 1 down
@@ -164,36 +166,26 @@
     [(< (length bag) 4) (append (rest bag) (shuffle DEFAULT-BAG))]
     [else (rest bag)])) 
 
-;; Blocks Score -> Score
-;; checks if there are any cleared rows, if so updates score
-(define (update-score blocks score)
-  (cond
-    [(clear-row? blocks 0)
-     (update-score!
-      blocks
-      (score-score score)
-      (score-level score)
-      (score-lines-cleared score))]
-    [else score]))
+;; ListOfBlocks ListOfBlocks Score -> Score
+;; calculates if any rows have been cleared, updates score if so
+(define (update-score blocks new-blocks score)
+  (let ([cleared-rows (/ (- (length blocks) (length new-blocks)) Y-LINES)])
+    (cond
+      [(> cleared-rows 0)
+       (update-score!
+        cleared-rows
+        (score-score score)
+        (score-level score)
+        (score-lines-cleared score))]
+      [else score])))
 
-;; Blocks Score Level Lines-cleared -> Score
-;; adds points for clearing a number of rows
-;; gives more score depending on the num of rows cleared
-(define (update-score! blocks score level lines-cleared)
+;; Num Score Level Lines-cleared -> Score
+;; updates score, level, lines-cleared
+(define (update-score! cleared-rows score level lines-cleared)
   (make-score
-   (new-score score level (/ (length-removed-blocks blocks) 10))
-   (new-level lines-cleared)
-   (new-lines-cleared lines-cleared blocks)))
-
-;; Num Blocks -> Num
-;; returns how many rows have been cleared so far
-(define (new-lines-cleared lines-cleared blocks)
-  (+ lines-cleared (/ (length-removed-blocks blocks) 10)))
-
-;; Blocks -> Number
-;; returns how many blocks have been cleared
-(define (length-removed-blocks blocks)
-  (- (length blocks) (length (clear-row! blocks (which-row blocks 1)))))
+   (new-score score level cleared-rows)
+   (new-level (+ lines-cleared cleared-rows))
+   (+ lines-cleared cleared-rows)))
 
 ;; Num Num -> Num
 ;; returns a new score based on current level and number of lines cleared

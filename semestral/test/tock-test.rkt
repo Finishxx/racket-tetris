@@ -305,28 +305,17 @@
     (test-suite
      "update-score!"
      (test-equal? "2 rows; 0; 1; 0"
-                  (update-score! TWO-ROW 0 1 0)
+                  (update-score! 2 0 1 0)
                   (make-score 300 1 2))
      (test-equal? "3 rows; 500; 1; 5"
-                  (update-score! THREE-ROW 500 1 5)
+                  (update-score! 3 500 1 5)
                   (make-score 1000 1 8))
      (test-equal? "3 rows; 900; 1; 9"
-                  (update-score! THREE-ROW 900 1 9)
-                  (make-score 1400 1 12))
+                  (update-score! 3 900 1 9)
+                  (make-score 1400 2 12))
      (test-equal? "1 row; 1500; 2; 25"
-                  (update-score! ONE-ROW 1500 2 25)
+                  (update-score! 1 1500 2 25)
                   (make-score 1700 2 26)))
-    (test-suite
-     "length-removed-blocks"
-     (test-equal? "ONE-ROW"
-                  (length-removed-blocks ONE-ROW)
-                  10)
-     (test-equal? "TWO-ROW"
-                  (length-removed-blocks TWO-ROW)
-                  20)
-     (test-equal? "THREE-ROW"
-                  (length-removed-blocks THREE-ROW)
-                  30))
     (test-suite
      "new-score"
      (test-equal? "0; 1; 3"
