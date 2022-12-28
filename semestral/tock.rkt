@@ -7,18 +7,8 @@
          )
 (provide (all-defined-out))
 
-;; tock:
-;; 1. is-blocked? ✓
-;; 2. fall ✓
-;; 3. block ✓
-;; 4. aux-blocked? ✓
-;; 5. posn-equal? ✓
-;; 6. clear-row? 
-
 ;; Tet -> Tet
-;; Depending on the posn of the tet-hand block
-;; 1. tet-hand can fall down and there isn't anything obstructing him, falls
-;; 2. tet-hand has a block below it and it is obstructed, blocks
+;; If tetrimino can't fall, we call block-row, else we let it fall by one
 (define (tock tet)
   (cond
     [(is-blocked? (tet-hand tet) (tet-blocks tet)) 
@@ -34,7 +24,7 @@
 (define (is-blocked? hand blocks) 
   (cond
     [(is-bottom? hand) #t]
-    [(aux-blocked? (block-placement hand (make-posn 0 -1)) blocks) #t] ;; the hard part
+    [(aux-blocked? (block-placement hand (make-posn 0 -1)) blocks) #t]
     [else #f])) 
 
 ;; Hand -> Bool
@@ -46,22 +36,22 @@
 
 ;; ListOfBlocks ListOfBlocks -> Bool
 ;; checks if any block in hand is equal in position to any block in blocks
-(define (aux-blocked? hand-1 blocks)
+(define (aux-blocked? hand blocks)
   (cond
     [(empty? blocks) #f]
-    [(or (posn-equal? hand-1 (first blocks))
-         (aux-blocked? hand-1 (rest blocks)))]
+    [(or (posn-equal? hand (first blocks))
+         (aux-blocked? hand (rest blocks)))]
     [else #f])) 
 
 
-;; Posn Posn -> Bool
+;; ListOfBlocks Block -> Bool
 ;; compares the posn of tetrimino and a block
 ;; to return #t if they are equal or #f if they are not
-(define (posn-equal? hand blocks)
+(define (posn-equal? hand block)
   (ormap (lambda (block)
-           (and (= (posn-x (block-posn block)) (posn-x (block-posn blocks)))
-                (= (posn-y (block-posn block)) (posn-y (block-posn blocks)))))
-         hand)) 
+           (and (= (posn-x (block-posn block)) (posn-x (block-posn block)))
+                (= (posn-y (block-posn block)) (posn-y (block-posn block)))))
+         hand))
 
 ;; Hand Blocks Bag Score -> Tet
 ;; spawns a new block, depending on if any rows are full, cleares them,
@@ -89,21 +79,21 @@
     [(>= y 20) #f]
     [else (clear-row? blocks (+ y 1))]))
 
-;; ListOf(posn)(blocks) Num -> ListOf(posn)(blocks)
-;; clears a row of 10 and lets the other blocks fall down
-;; every block higher than hand(x y) goes (x y-1)
+;; ListOfBlocks Num -> ListOfBlocks
+;; clears a target row and repeats calling itself with new state
 (define (clear-row! blocks target)
-  (cond
-    [(number? target)
-     (clear-row! (dirty-work blocks target) (which-row (dirty-work blocks target) 1))]
-    [else blocks]))
+  (let ([new-blocks (dirty-work blocks target)])
+    (cond
+      [(number? target)
+       (clear-row! new-blocks (which-row new-blocks 1))]
+      [else blocks])))
 
 ;; ListOfBlocks Num -> ListOfBlocks
 ;; kills a target row and moves the blocks above it 1 down
 (define (dirty-work blocks target)
   (move-row (kill-row blocks (select-row blocks target)) target))
 
-;; ListOfPosn Num -> Num
+;; ListOfBlocks Num -> Num
 ;; returns y pos of the first row from bottom that is full
 (define (which-row blocks y)
   (cond
@@ -111,7 +101,7 @@
     [(>= y 21) #f]
     [else (which-row blocks (+ y 1))])) 
 
-;; ListOfPosn Num -> Bool
+;; ListOfBlocks Num -> Bool
 ;; checks if there is 10 blocks on one row given the blocks and row num
 (define (is-ten? blocks y)
   (= 10 (length (select-row blocks y))))
@@ -121,12 +111,12 @@
 (define (fall hand)
   (block-placement hand (make-posn 0 -1)))
 
-;; Posn(tet-hand) ListOf(Posn)(tet-blocks) -> ListOf(Posn)(tet-blocks)
+;; Block ListOfBlocks -> ListOfBlocks
 ;; appends the value of tet-hand to list tet-blocks and returns new tet-blocks
 (define (block! hand blocks)
-  (append hand blocks)) ;; ✓
+  (append hand blocks))
   
-;; ListOfPosn Num -> ListOfPosn
+;; ListOfBlocks Num -> ListOfBlocks
 ;; selects all blocks that are in y row from blocks
 (define (select-row blocks y)
   (filter (lambda (block)
@@ -134,32 +124,33 @@
           blocks))
 
 
-;; ListOfPosn ListOfPosn Num -> ListOfPosn
-;; select all rows above y and stores them into rows
+;; ListOfBlocks ListOfBlocks Num -> ListOfBlocks
+;; select all rows above given y
 (define (select-above blocks rows y)
   (cond [(< y 22) (select-above blocks (append rows (select-row blocks y)) (+ 1 y))]
         [else rows]))
 
-;; ListOfPosn ListOfPosn Num -> ListOfPosn
-;; select all rows below y and stores them into rows
+;; ListOfBlocks ListOfBlocks Num -> ListOfBlocks
+;; select all rows below given y
 (define (select-below blocks rows y)
   (cond [(> y 0) (select-below blocks (append rows (select-row blocks y)) (- y 1))]
         [else rows]))
 
 
-;; ListOfPosn ListOfPosn -> ListOfPosn
-;; given a list of blocks deletes them
+;; ListOfBlocks ListOfBlocks -> ListOfBlocks
+;; given a row deletets all of it's members from blocks
 (define (kill-row blocks row)
   (remove* row blocks))
 
-;; ListOfPosn Num -> ListOfPosn
-;; given a list of blocks moves all above the y (posn x y-1)
-;; selects the row above the deleted one and goes on untill row 21
+;; ListOfBlocks Num -> ListOfBlocks
+;; given a list of blocks moves all above the y down
+;; selects the row above the deleted one, moves it down
+;; and goes on untill row 21
 (define (move-row blocks y)
   (append (select-below blocks (list) y) (fall-down (select-above blocks (list) y))))
 
-;; ListOfPosn
-;; Given a row of blocks moves them down by (posn x -1)
+;; ListOfBlocks
+;; Given a row of blocks moves them down by one
 (define (fall-down blocks)
   (map (lambda (arg)
          (make-block (make-posn (posn-x (block-posn arg)) (- (posn-y (block-posn arg)) 1)) (block-col arg)))
@@ -173,7 +164,7 @@
     [(< (length bag) 4) (append (rest bag) (shuffle DEFAULT-BAG))]
     [else (rest bag)])) 
 
-;; Blocks, Score -> Score
+;; Blocks Score -> Score
 ;; checks if there are any cleared rows, if so updates score
 (define (update-score blocks score)
   (cond
@@ -233,8 +224,6 @@
 ;; if a player reaches level 10+ all next levels are after 100 cleared lines
 (define (level-over-10 lines-cleared)
   (+ (quotient lines-cleared 100) 10))
-  
-
 
 ;; Level -> Num
 ;; sets the clock speed depending on the level
