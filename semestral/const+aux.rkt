@@ -100,6 +100,7 @@
 
 ;; ================ Mathematical constants: ================
 (define CUBE-LENGTH 20)
+(define CLOCK-SPEED (/ 1 60)) ;; 60 fps
 ;; how many blocks stacked vertically/horizontally fit into canvas
 (define SCENE-WIDTH-INDEX 20)
 (define SCENE-HEIGHT-INDEX 30)

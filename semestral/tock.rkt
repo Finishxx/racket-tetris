@@ -12,8 +12,12 @@
 (define (tock-pause clock)
   (cond
     [(clock-pause clock) clock] ;; = true
+    [(>= (clock-tick clock) (get-ticks-for-tock (score-level (tet-score (clock-tet clock)))))
+     (make-clock 0 ;; TODO: make it based on level
+                 (tock (clock-tet clock))
+                 (clock-pause clock))]
     [else (make-clock (+ (clock-tick clock) 1) ;; TODO: make it based on level
-                        (tock (clock-tet clock))
+                        (clock-tet clock)
                         (clock-pause clock))]))
 
 ;; Tet -> Tet
@@ -220,6 +224,25 @@
     [(< lines-cleared 451) 9]
     [(< lines-cleared 551) 10]
     [else (level-over-10 (- lines-cleared 551))]))
+
+;; Num -> Num
+;; returns how many frames before tock is called
+;; values from https://harddrop.com/wiki/Tetris_Worlds
+(define (get-ticks-for-tock level)
+  (cond
+    [(= level 1) (round (/ 1 0.01667))]
+    [(= level 2) (round (/ 1 0.021017 ))]
+    [(= level 3) (round (/ 1 0.026977 ))]
+    [(= level 4) (round (/ 1 0.035256 ))]
+    [(= level 5) (round (/ 1 0.04693 ))]
+    [(= level 6) (round (/ 1 0.06361 ))]
+    [(= level 7) (round (/ 1 0.0879 ))]
+    [(= level 8) (round (/ 1 0.1236 ))]
+    [(= level 9) (round (/ 1 0.1775 ))]
+    [(= level 10) (round (/ 1 0.2598 ))]
+    [(= level 11) (round (/ 1 0.388 ))]
+    [(= level 12) 2]
+    [else 1]))
 
 ;; Num -> Num
 ;; if a player reaches level 10+ all next levels are after 100 cleared lines
