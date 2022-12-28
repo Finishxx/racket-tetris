@@ -45,7 +45,7 @@
          hand)) 
 
 ;; ListOfBlocks ListOfBlocks -> Bool
-;; checks if any block in hand-1 is equal to any block in blocks
+;; checks if any block in hand is equal in position to any block in blocks
 (define (aux-blocked? hand-1 blocks)
   (cond
     [(empty? blocks) #f]

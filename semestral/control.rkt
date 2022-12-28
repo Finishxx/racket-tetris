@@ -40,22 +40,21 @@
    (cond
      [(rotate? (tet-hand tet) (tet-blocks tet))
       (rotate-me (tet-hand tet))]
-     [(rotate? (block-placement (tet-hand tet) (make-posn 2 0)) (tet-blocks tet))
-      (rotate-me (block-placement (tet-hand tet) (make-posn 2 0)))]
+     [(rotate? (block-placement (tet-hand tet) (make-posn 1 0)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn 1 0)))]
      [(rotate? (block-placement (tet-hand tet) (make-posn -1 0)) (tet-blocks tet))
       (rotate-me (block-placement (tet-hand tet) (make-posn -1 0)))]
      [(rotate? (block-placement (tet-hand tet) (make-posn 0 1)) (tet-blocks tet))
       (rotate-me (block-placement (tet-hand tet) (make-posn 0 1)))]
      [(rotate? (block-placement (tet-hand tet) (make-posn 0 2)) (tet-blocks tet))
       (rotate-me (block-placement (tet-hand tet) (make-posn 0 2)))]
-     [else tet])
+     [(rotate? (block-placement (tet-hand tet) (make-posn 2 0)) (tet-blocks tet))
+      (rotate-me (block-placement (tet-hand tet) (make-posn 2 0)))] ;; case specially for I
+     [else (tet-hand tet)])
    (tet-blocks tet) (tet-bag tet) (tet-score tet)))
 
-;; Posn(tet-hand) ListOf(Posn)(tet-blocks) -> Bool
+;; Posn(tet-hand) ListOfPosn(tet-blocks) -> Bool
 ;; returns false, if any of the tet-blocks are tet-hand(x-1,y)or if they are on the border
-;; 1. there is -> false
-;; 2. there isn't -> true
-;; 3. empty list -> true
 (define (check-left hand blocks)
   (cond
     [(is-at-x? hand 1) #f]
@@ -71,9 +70,6 @@
 
 ;; Posn(tet-hand) ListOf(Posn)(tet-blocks) -> Bool
 ;; returns false, if any of the tet-blocks are tet-hand(x+1,y)
-;; 1. there is -> false
-;; 2. there isn't -> true
-;; 3. empty list -> true
 (define (check-right hand blocks)
   (cond
     [(is-at-x? hand 10) #f]
@@ -92,11 +88,11 @@
 
 ;; Posn(tet-hand) ListOf(Posn)(tet-blocks)-> Tet
 ;; Moves the tet-hand block one down if not blocked, if so sticks it to the tet-blocks
-;; 1. There are no blocks on the x coordinate -> (x 1)
-;; 2. There are some blocks -> Depends
+;; 1. There are no blocks on the x coordinate -> (x y - 1)
+;; 2. There are some blocks -> places the tetrimono
 (define (move-down hand blocks bag score)
   (cond
-    [(is-blocked? hand blocks) (block-row hand blocks bag score)]
+    [(is-blocked? hand blocks) (block-row hand blocks bag score)] ; tock responsibility
     [else (make-tet
            (block-placement hand (make-posn 0 -1))
            blocks bag score)]))
@@ -124,11 +120,11 @@
 ;; checks if a rotation is possible without collision
 (define (rotate? hand blocks)
   (cond
+    [(is-O? hand) #f]
     [(or (aux-blocked? (rotate-me hand) blocks)
          (is-at-x? (rotate-me hand) 11)
          (is-at-x? (rotate-me hand) 0)
          (is-at-y? (rotate-me hand) 0)) #f]
-    [(is-O? hand) #f]
     [else #t]))
 
 
@@ -155,26 +151,19 @@
           hand))
 
 ;; Hand -> Bool
-;; check if a block is an O
+;; check if a block is an O. Abuses the fact that O-s never rotate
+;; therefore their structure is always perserved
 (define (is-O? hand)
-  (cond
-    [(and (pos-eq? (first (rotate-O! hand)) (second hand))
-          (pos-eq? (second (rotate-O! hand)) (fourth hand))
-          (pos-eq? (third (rotate-O! hand)) (first hand))
-          (pos-eq? (fourth (rotate-O! hand)) (third hand)))
-     #t]
-    [else #f]))
-
-;; Hand -> Hand
-;; rotates an O
-(define (rotate-O! hand)
-  (rotate! hand (make-block (make-posn
-                             (half (+ (posn-x (block-posn (second hand)))
-                                      (posn-x (block-posn (third hand)))))
-                             (half (+ (posn-y (block-posn (second hand)))
-                                      (posn-y (block-posn (third hand))))))
-                            (block-col (first hand)))))
-
+  (let
+      ([left-top-pos (block-posn (first hand))]
+       [right-top-pos (block-posn (second hand))]
+       [left-bottom-pos (block-posn (third hand))]
+       [right-bottom-pos (block-posn (fourth hand))])
+    (and (= (posn-y left-top-pos) (posn-y right-top-pos))
+         (= (posn-x left-top-pos) (posn-x left-bottom-pos))
+         (= (posn-x right-top-pos) (posn-x right-bottom-pos))
+         (= (posn-y left-bottom-pos) (posn-y right-bottom-pos)))))
+       
 ;; Block Block -> Bool
 ;; returns true if posns of blocks are equal
 (define (pos-eq? block1 block2)
@@ -185,6 +174,8 @@
 
 ;; Hand -> Hand
 ;; rotates a hand cw by 90° based on a origin block
+;; moves the tetrimino, so the origin is at (0, 0)
+;; and rotates the rest around the origin
 (define (rotate! hand origin)
   (block-placement (map (lambda (block)
                           (make-block
@@ -197,25 +188,32 @@
 
 ;; Hand -> Hand
 ;; rotates an I
+;; I is special in that it's rotation origin is not center
+;; of one of it's blocks, therefore the complex origin-creation
+;; Super rotational system for I:
+;; https://strategywiki.org/wiki/File:Tetris_rotation_super.png
 (define (rotate-I! hand)
-  (cond [(all-y? hand) (rotate! hand (make-block
-                                      (make-posn
-                                       (half (+ (posn-x (block-posn (second hand)))
-                                                (posn-x (block-posn (third hand)))))
-                                       (- (posn-y (block-posn (second hand))) 0.5))
-                                      (block-col (first hand))))]
-        [(all-x? hand) (block-placement (rotate! hand (make-block
-                                                       (make-posn
-                                                        (+ 0.5 (posn-x (block-posn (second hand))))
-                                                        (half (+ (posn-y (block-posn (second hand)))
-                                                                 (posn-y (block-posn (third hand))))))
-                                                       (block-col (first hand))))
-                                        (make-posn -1 0))]))
+  (cond [(all-y? hand)
+         (rotate! hand (make-block
+                        (make-posn
+                         (half (+ (posn-x (block-posn (second hand)))
+                                  (posn-x (block-posn (third hand)))))
+                         (- (posn-y (block-posn (second hand))) 0.5))
+                        (block-col (first hand))))]
+        [(all-x? hand)
+         (block-placement (rotate! hand (make-block
+                                         (make-posn
+                                          (+ 0.5 (posn-x (block-posn (second hand))))
+                                          (half (+ (posn-y (block-posn (second hand)))
+                                                   (posn-y (block-posn (third hand))))))
+                                         (block-col (first hand))))
+                          (make-posn -1 0))]))
 
   
 
 ;; Hand -> Hand
-;; rotates a block
+;; rotates a tetrimino. the tetriminos are defined in a way
+;; so the first block is ideal for rotating, exception being I
 (define (rotate-me hand)
   (cond
     [(is-O? hand) hand]
@@ -223,10 +221,10 @@
     [else (rotate! hand (first hand))]))
 
 ;; Hand Blocks -> Blocks
-;; pushes a block as far down as it can
+;; pushes a tetrimino as far down as it can
 (define (quick-fall hand blocks bag score)
   (cond
-    [(is-blocked? hand blocks) (block-row hand blocks bag score)]
-    [else (block-row (ghost-block-pos hand blocks) blocks bag score)]))
+    [(is-blocked? hand blocks) (block-row hand blocks bag score)] ;; responsibility of tock
+    [else (block-row (ghost-block-pos hand blocks) blocks bag score)])) ;; responsibility of tock
 
 
