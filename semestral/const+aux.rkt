@@ -1,6 +1,7 @@
 #lang racket
 
-(require lang/posn 2htdp/image)
+(require lang/posn 2htdp/image
+         rsound)
 (provide (all-defined-out))
 
 ;; ================ DATA DEFINITIONS: ================
@@ -25,7 +26,7 @@
 ;; tet-bag holds upcoming tetriminos
 ;; tet-score describes the current score of the player
 
-(define-struct clock [tick tet pause]
+(define-struct clock [tick tet pause music]
   #:transparent)
 ;; Clock is a Structure
 ;; (make-clock Num Tet Bool)
@@ -34,15 +35,7 @@
 ;;   amount, it becomes zero and tock is called
 ;; clock-tet holds the current state of the game
 ;; clock-pause is true when the game is pause and false when the game is on
-
-(define-struct music [begin end clock]
-  #:transparent)
-;; Music is a Structure
-;; (make-music Num Num Clock)
-;; Implementation:
-;; music-begin is the frame on which the last music started playing
-;; music-end is the frame on which the music ends and should be restarted
-;; music-clock holds the current state of the game together with clock
+;; clock-music represents the frame of STREAM when the current playing music ends
 
 (define-struct score [score level lines-cleared]
   #:transparent)
@@ -129,7 +122,12 @@
 (define X-LINES 20)
 (define Y-LINES 10)
 
-
+;; ================ Music constants: ================
+(define MUSIC-PATH "korobeiniki.wav")
+(define TETRIS-MUSIC (rs-read MUSIC-PATH))
+(define MUSIC-LENGTH (rs-frames TETRIS-MUSIC))
+(define NEXT-STOP MUSIC-LENGTH)
+(define STREAM (make-pstream))
 
 ;; ================ Graphical constants: ================
 

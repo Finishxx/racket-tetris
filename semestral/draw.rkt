@@ -5,10 +5,6 @@
          "tock.rkt")
 (provide (all-defined-out))
 
-
-(define (draw-music music)
-  (draw-pause (music-clock music)))
-
 ;; Clock -> Img
 ;; if the game is paused adds to the drawing a PAUSE text
 (define (draw-pause clock)

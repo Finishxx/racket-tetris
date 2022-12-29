@@ -5,13 +5,6 @@
          lang/posn)
 (provide (all-defined-out))
 
-;; Simple wrappers for music
-(define (end-game-music? music)
-  (end-game-pause? (music-clock music)))
-
-(define (last-frame-music music)
-  (last-frame-pause (music-clock music)))
-
 ;; Simple wrappers for pause
 (define (end-game-pause? clock)
   (end-game? (clock-tet clock)))

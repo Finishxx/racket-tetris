@@ -7,41 +7,20 @@
          rsound)
 (provide (all-defined-out))
 
-(define MUSIC-PATH "korobeiniki.wav")
-(define TETRIS-MUSIC (rs-read MUSIC-PATH))
-(define MUSIC-LENGTH (rs-frames TETRIS-MUSIC))
-(define NEXT-STOP MUSIC-LENGTH)
-(define STREAM (make-pstream))
-(pstream-play STREAM TETRIS-MUSIC)
-#|
-(define (play-music frame in-play)
-  (begin
-    (pstream-queue STREAM TETRIS-MUSIC (pstream-current-frame STREAM))
-    in-play))
-
-(define (music frame)
-  (let ([in-play (modulo (pstream-current-frame STREAM) MUSIC-LENGTH)])
-    (cond
-      [(> frame in-play)
-      (play-music frame in-play)]
-      [else (pstream-current-frame STREAM)])))
-|#
-
+;; Plays music
 (define (play-music music)
   (begin
     (define NEW-START (pstream-current-frame STREAM))
     (define NEW-END (+ NEW-START MUSIC-LENGTH))
     (pstream-queue STREAM TETRIS-MUSIC NEW-START)
-    (make-music NEW-START NEW-END (tock-pause (music-clock music)))))
+    NEW-END))
 
-
+;; Decides if it is the right time to play music, if so returns its end-frame
 (define (tock-music music)
   (cond
-    [(<= (music-end music) (pstream-current-frame STREAM))
+    [(<= music (pstream-current-frame STREAM))
      (play-music music)]
-    [else (make-music (music-begin music)
-                      (music-end music)
-                      (tock-pause (music-clock music)))]))
+    [else music]))
 
 ;; Clock -> Clock
 ;; if pause, we skip, else we do
@@ -51,10 +30,12 @@
     [(>= (clock-tick clock) (get-ticks-for-tock (score-level (tet-score (clock-tet clock)))))
      (make-clock 0
                  (tock (clock-tet clock))
-                 (clock-pause clock))]
+                 (clock-pause clock)
+                 (tock-music (clock-music clock)))]
     [else (make-clock (+ (clock-tick clock) 1)
                         (clock-tet clock)
-                        (clock-pause clock))]))
+                        (clock-pause clock)
+                        (tock-music (clock-music clock)))]))
 
 ;; Tet -> Tet
 ;; If tetrimino can't fall, we call block-row, else we let it fall by one

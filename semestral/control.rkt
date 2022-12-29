@@ -1,18 +1,11 @@
 #lang racket
 
-(require 2htdp/image
-         "const+aux.rkt"
+(require "const+aux.rkt"
          lang/posn
          "tock.rkt"
          (only-in "draw.rkt" ghost-block-pos))
 (provide (all-defined-out))
 
-
-;; simple wrapper for music
-(define (control-music music ke)
-  (make-music (music-begin music)
-              (music-end music)
-              (control-pause (music-clock music) ke)))
 
 ;; Clock Ke -> Clock
 ;; Take care of resolving pause and also resets clock-tick
@@ -28,7 +21,8 @@
                         [(or (string=? ke "down") (string=? ke "\r")) 0]
                         [else (clock-tick clock)])
                       (control (clock-tet clock) ke)
-                      (clock-pause clock))]))
+                      (clock-pause clock)
+                      (clock-music clock))]))
                    
 
 ;; Tet Ke -> Tet
