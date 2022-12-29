@@ -44,7 +44,8 @@
      (list)
      (rest SHUFFLED-BAG)
      (make-score 0 3 35))
-    #f)))
+    #f
+    0)))
 |#
 #|
 (define MID-START
@@ -56,7 +57,8 @@
      (list)
      (rest SHUFFLED-BAG)
      (make-score 0 6 200))
-    #f)))
+    #f
+    0)))
 |#
 #|
 (define LATE-START
@@ -68,5 +70,6 @@
      (list)
      (rest SHUFFLED-BAG)
      (make-score 0 10 500))
-    #f)))
+    #f
+    0)))
 |#
