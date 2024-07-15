@@ -1,6 +1,6 @@
 # Racket Tetris
 
-This project was first intended as a maturita project, later on reused and revised
+This project was first intended as a maturita (graduation) project, later on reused and revised
 as a semestral work in "Programming paradigmes" course of [FIT CVUT](https://fit.cvut.cz/cs).
 
 The game is developed using Racket's built-in `universe.rkt` package found [here](https://docs.racket-lang.org/teachpack/2htdpuniverse.html).
